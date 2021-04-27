@@ -1,0 +1,44 @@
+<form @onsubmit="@LogIn">
+    <MudFocusTrap DefaultFocus="@defaultFocus">
+        <MudPaper Elevation="25" Class="pa-8" Width="100%" MaxWidth="500px">
+            <MudTextField @bind-Value="@username" Required RequiredError="@stringLocalizer[StringLocalizer.Required]"
+                Label="@stringLocalizer[StringLocalizer.Username]" Variant="Variant.Filled" Class="my-0"
+                Error="@hasWrongLogin" />
+
+            <MudTextField @bind-Value="@password" Required RequiredError="@stringLocalizer[StringLocalizer.Required]"
+                Label="@stringLocalizer[StringLocalizer.Password]" Variant="Variant.Filled"
+                InputType="InputType.Password" Class="my-6" Error="@hasWrongLogin" />
+
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large" FullWidth="true"
+                ButtonType="@ButtonType.Submit">
+                @stringLocalizer[StringLocalizer.LogIn]
+            </MudButton>
+        </MudPaper>
+    </MudFocusTrap>
+</form>
+
+@code {
+    [Inject] private IStringLocalizer stringLocalizer { get; set; }
+    [Inject] private NavigationManager navigationManager { get; set; }
+    [Inject] private LoginUtilityService loginUtilityService { get; set; }
+
+    private bool hasWrongLogin { get; set; }
+    private string username { get; set; }
+    private string password { get; set; }
+    private DefaultFocus defaultFocus { get; set; } = DefaultFocus.FirstChild;
+
+    private async Task LogIn()
+    {
+        var loginUrl = await loginUtilityService.TryLoginAndGetLoginUrlAsync(username, password);
+        if (loginUrl != null)
+        {
+            navigationManager.NavigateTo(loginUrl, forceLoad: true);
+        }
+        else
+        {
+            hasWrongLogin = true;
+            username = null;
+            password = null;
+        }
+    }
+}

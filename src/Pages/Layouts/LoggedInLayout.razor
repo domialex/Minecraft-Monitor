@@ -1,0 +1,63 @@
+<div>
+    <MudLayout>
+
+        <MudAppBar Elevation="1">
+            <MudIconButton Icon="@(isDrawerOpened ? Icons.Material.Filled.MenuOpen : Icons.Material.Filled.Menu)"
+                Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+
+            <MudAppBarSpacer />
+
+            <MonitorStatus />
+
+            <MudTooltip Text="Minecraft Monitor - GitHub">
+                <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Link="https://github.com/domialex/Minecraft-Monitor"
+                    Target="_blank" />
+            </MudTooltip>
+
+            <MudTooltip Text="Log out">
+                <MudIconButton Icon="@Icons.Material.Filled.Logout" Link="/account/signout" Edge="@Edge.End" />
+            </MudTooltip>
+        </MudAppBar>
+
+        <MudDrawer @bind-Open="@isDrawerOpened" Elevation="1">
+            <MudDrawerHeader>
+                <img class="brand" src="favicon.ico" />
+                <MudText Typo="Typo.h6">Minecraft Monitor</MudText>
+            </MudDrawerHeader>
+            <NavMenu />
+        </MudDrawer>
+
+        <MudMainContent Class="pt-16 px-16">
+            <MudContainer Class="mt-6">
+                @childContent
+            </MudContainer>
+        </MudMainContent>
+
+    </MudLayout>
+</div>
+
+@code {
+    [Parameter] public RenderFragment childContent { get; set; }
+
+    [Inject] private IConfiguration configuration { get; set; }
+    [Inject] private NavigationManager navigationManager { get; set; }
+    [Inject] private SignInManager<IdentityUser> signInManager { get; set; }
+
+    private bool isDrawerOpened = true;
+    private bool enableAdminDashboard { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        enableAdminDashboard = configuration.GetValue<bool>("EnableAdminDashboard");
+        if (!enableAdminDashboard)
+        {
+            await signInManager.SignOutAsync();
+            navigationManager.NavigateTo("/");
+        }
+    }
+
+    private void ToggleDrawer()
+    {
+        isDrawerOpened = !isDrawerOpened;
+    }
+}

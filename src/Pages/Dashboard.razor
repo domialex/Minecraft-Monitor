@@ -1,0 +1,38 @@
+@page "/dashboard"
+
+<PageTitle Title="@stringLocalizer[StringLocalizer.Dashboard]" />
+
+<MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">@stringLocalizer[StringLocalizer.Dashboard]</MudText>
+
+<MudGrid>
+    <MudItem lg="6" md="12" Class="d-flex">
+        <SettingsWidget />
+    </MudItem>
+    <MudItem lg="6" md="12" Class="d-flex">
+        <MonitorServiceWidget />
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Inject] private IDbContextFactory<MinecraftMonitorContext> minecraftMonitorContextFactory { get; set; }
+    [Inject] private IDialogService DialogService { get; set; }
+    [Inject] private IStringLocalizer stringLocalizer { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            using (var minecraftMonitorContext = minecraftMonitorContextFactory.CreateDbContext())
+            {
+                var settings = await minecraftMonitorContext.Settings.SingleAsync();
+                if (!settings.IsOnboardingDone)
+                {
+                    await DialogService.ShowMessageBox(stringLocalizer[StringLocalizer.WelcomeTitle],
+                    stringLocalizer[StringLocalizer.WelcomeBody]);
+                }
+            }
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

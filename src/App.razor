@@ -1,0 +1,25 @@
+@using Minecraft_Monitor.Pages
+
+<CascadingAuthenticationState>
+
+    <Router AppAssembly="@typeof(Program).Assembly">
+
+        <Found Context="routeData">
+
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+
+                <NotAuthorized>
+                    <LoginForm />
+                </NotAuthorized>
+
+            </AuthorizeRouteView>
+
+        </Found>
+
+        <NotFound>
+            <Map />
+        </NotFound>
+
+    </Router>
+
+</CascadingAuthenticationState>

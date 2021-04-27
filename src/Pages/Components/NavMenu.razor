@@ -1,0 +1,13 @@
+@inject IStringLocalizer stringLocalizer
+
+<MudNavMenu>
+    <MudNavLink Href="/dashboard" Icon="@Icons.Material.Outlined.Dashboard" IconColor="Color.Info">
+        <MudText Typo="Typo.subtitle1">@stringLocalizer[StringLocalizer.Dashboard]</MudText>
+    </MudNavLink>
+    <MudNavLink Href="#" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.Map" IconColor="Color.Success">
+        <MudText Typo="Typo.subtitle1">@stringLocalizer[StringLocalizer.Map]</MudText>
+    </MudNavLink>
+    <MudNavLink Href="/about" Icon="@Icons.Material.Outlined.Info">
+        <MudText Typo="Typo.subtitle1">@stringLocalizer[StringLocalizer.About]</MudText>
+    </MudNavLink>
+</MudNavMenu>

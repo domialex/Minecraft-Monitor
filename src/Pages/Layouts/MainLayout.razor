@@ -1,0 +1,43 @@
+@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="mudTheme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<AuthorizeView>
+    <Authorized>
+        <LoggedInLayout>@Body</LoggedInLayout>
+    </Authorized>
+
+    <NotAuthorized>
+        <UnloggedLayout>@Body</UnloggedLayout>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private MudTheme mudTheme = new MudTheme()
+    {
+        Palette = new Palette()
+        {
+            Primary = "#477A1E",
+            Secondary = "#61371F",
+            Tertiary = "#C28340",
+
+            Success = "#477A1E",
+            Info = "#61371F",
+
+            Background = "#212121",
+            DrawerBackground = "#181818",
+            Surface = "#252525",
+            AppbarBackground = "#212121",
+
+            TextPrimary = "#ABABAB",
+            TextSecondary = "#DEDEDE",
+
+            DrawerText = "#DEDEDE",
+            DrawerIcon = "#DEDEDE",
+            ActionDefault = "#477A1E"
+
+        }
+    };
+}

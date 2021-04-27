@@ -1,0 +1,80 @@
+@implements IDisposable
+
+<MudCard Class="flex-grow-1">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText>Minecraft Monitor</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudGrid Class="align-center">
+            <MudItem md="6" Class="d-flex flex-row">
+                <MudText Typo="Typo.subtitle1" Class="d-flex align-center">
+                    <b>@stringLocalizer[StringLocalizer.MonitorStatusLabel]</b>
+                    <MonitorStatus />
+                </MudText>
+            </MudItem>
+            <MudItem md="6" Class="d-flex flex-row align-center">
+                <MudText Typo="Typo.subtitle1" Class="mr-4">
+                    <b>@stringLocalizer[StringLocalizer.ConnectionStatus]</b>
+                </MudText>
+                @if (rconService.Connected)
+                {
+                    <MudText Color="@Color.Success">@stringLocalizer[StringLocalizer.Connected]</MudText>
+                }
+                else
+                {
+                    <MudText Color="@Color.Error">@stringLocalizer[StringLocalizer.NotConnected]</MudText>
+                }
+            </MudItem>
+            @if (serverInfo != null)
+            {
+                <MudItem md="6" Class="d-flex align-center">
+                    <MudText Typo="Typo.subtitle1" Class="flex-row d-flex align-center mr-4">
+                        <b>@stringLocalizer[StringLocalizer.LastUpdate]</b>
+                    </MudText>
+                    <MudTooltip Text=@(serverInfo.LastUpdate.LocalDateTime.ToString("F"))>
+                        <MudText>@serverInfo.LastUpdate.LocalDateTime.ToString("H:mm:ss tt")</MudText>
+                    </MudTooltip>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudCardContent>
+    <MudCardActions Class="pb-4">
+
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Inject] private MonitorService monitorService { get; set; }
+    [Inject] private RconService rconService { get; set; }
+    [Inject] private IDbContextFactory<MinecraftMonitorContext> minecraftMonitorContextFactory { get; set; }
+    [Inject] private IStringLocalizer stringLocalizer { get; set; }
+    [Inject] private ISnackbar Snackbar { get; set; }
+
+    private ServerInfo serverInfo { get; set; }
+
+    private async void OnUpdate()
+    {
+        using (var minecraftMonitorContext = minecraftMonitorContextFactory.CreateDbContext())
+        {
+            serverInfo = await minecraftMonitorContext.ServerInfo.SingleAsync();
+        }
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        monitorService.OnUpdate += OnUpdate;
+
+        OnUpdate();
+
+        await base.OnInitializedAsync();
+    }
+
+    public void Dispose()
+    {
+        monitorService.OnUpdate -= OnUpdate;
+    }
+}

@@ -1,0 +1,43 @@
+@page "/about"
+
+@inject IStringLocalizer stringLocalizer
+
+<PageTitle Title="@stringLocalizer[StringLocalizer.About]" />
+
+<MudText Typo="Typo.h5" Color="Color.Primary" Class="mb-4">@stringLocalizer[StringLocalizer.About]</MudText>
+
+<MudGrid>
+    <MudItem>
+        <MudPaper Class="flex-grow-1">
+            <MudText Class="pa-4">@stringLocalizer[StringLocalizer.AboutText]</MudText>
+            <MudList>
+                <MudListItem Text="MudBlazor">
+                    <MudLink Href="https://github.com/Garderoben/MudBlazor" Target="_blank" Underline="Underline.None">
+                        MudBlazor</MudLink>
+                </MudListItem>
+                <MudListItem>
+                    <MudLink Href="https://github.com/wgraham17/rconsharp" Target="_blank" Underline="Underline.None">
+                        RconSharp.NetStandard
+                    </MudLink>
+                </MudListItem>
+                <MudListItem>
+                    <MudLink Href="https://github.com/serilog/serilog" Target="_blank" Underline="Underline.None">
+                        Serilog
+                    </MudLink>
+                </MudListItem>
+                <MudListItem>
+                    <MudLink Href="https://github.com/domaindrivendev/Swashbuckle.AspNetCore" Target="_blank"
+                        Underline="Underline.None">
+                        Swashbuckle.AspNetCore
+                    </MudLink>
+                </MudListItem>
+                <MudListItem>
+                    <MudLink Href="https://github.com/overviewer/Minecraft-Overviewer/" Target="_blank"
+                        Underline="Underline.None">
+                        Minecraft Overviewer
+                    </MudLink>
+                </MudListItem>
+            </MudList>
+        </MudPaper>
+    </MudItem>
+</MudGrid>

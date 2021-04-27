@@ -1,0 +1,15 @@
+::deep .mud-drawer-header {
+    align-items: center;
+    flex-direction: column;
+}
+
+::deep .brand {
+    display: block;
+    max-width: 100px;
+    margin: 1rem auto;
+    filter: drop-shadow(0 0 5px black);
+}
+
+::deep #mcmap {
+    height: calc(100vh - var(--mud-appbar-min-height) - 3rem);
+}

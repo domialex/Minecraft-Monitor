@@ -1,0 +1,118 @@
+<MudCard Class="flex-grow-1">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText>@stringLocalizer[StringLocalizer.SettingsWidgetTitle]</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <form @onsubmit="@SaveSettings">
+            <MudGrid>
+                <MudItem xs="12" md="5">
+                    <MudTextField @bind-Value="@settingsModel.Hostname" Required
+                        RequiredError="@stringLocalizer[StringLocalizer.Required]"
+                        Label="@stringLocalizer[StringLocalizer.Hostname]" Variant="Variant.Text" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="@settingsModel.Port" Required
+                        RequiredError="@stringLocalizer[StringLocalizer.Required]"
+                        Label="@stringLocalizer[StringLocalizer.Port]" Variant="Variant.Text"
+                        HelperText="@stringLocalizer[StringLocalizer.PortHelperText]" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField @bind-Value="@settingsModel.Password" Required
+                        RequiredError="@stringLocalizer[StringLocalizer.Required]"
+                        Label="@stringLocalizer[StringLocalizer.Password]" Variant="Variant.Text"
+                        InputType="InputType.Password" />
+                </MudItem>
+                <MudItem md="12">
+                    <MudTextField @bind-Value="@settingsModel.OverviewerOutputPath" Required
+                        ErrorText="@overviewerOutputPathErrorText"
+                        Error="@(!string.IsNullOrWhiteSpace(overviewerOutputPathErrorText))"
+                        RequiredError="@stringLocalizer[StringLocalizer.Required]"
+                        Label="@stringLocalizer[StringLocalizer.OverviewerOutputPath]" Variant="Variant.Text"
+                        HelperText="@stringLocalizer[StringLocalizer.OverviewerOutputPathHelperText]" />
+                </MudItem>
+            </MudGrid>
+        </form>
+    </MudCardContent>
+    <MudCardActions Class="pb-4 pr-4 justify-end">
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.Undo"
+            @onclick="ResetSettings">@stringLocalizer[StringLocalizer.DisableMap]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Save" Class="ml-4"
+            @onclick="SaveSettings">
+            @stringLocalizer[StringLocalizer.Save]
+        </MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Inject] private IDbContextFactory<MinecraftMonitorContext> minecraftMonitorContextFactory { get; set; }
+    [Inject] private RconService rconService { get; set; }
+    [Inject] private IStringLocalizer stringLocalizer { get; set; }
+    [Inject] private ISnackbar snackbar { get; set; }
+
+    private string overviewerOutputPathErrorText { get; set; }
+
+    private class SettingsModel
+    {
+        public string Hostname { get; set; }
+        public ushort Port { get; set; }
+        public string Password { get; set; }
+        public string OverviewerOutputPath { get; set; }
+    }
+
+    private SettingsModel settingsModel { get; set; } = new();
+
+    private async Task ResetSettings()
+    {
+        overviewerOutputPathErrorText = null;
+
+        using (var minecraftMonitorContext = minecraftMonitorContextFactory.CreateDbContext())
+        {
+            var settings = await minecraftMonitorContext.Settings.SingleAsync();
+            settings.OverviewerOutputPath = null;
+            await minecraftMonitorContext.SaveChangesAsync();
+            settingsModel.OverviewerOutputPath = null;
+        }
+
+        snackbar.Add(stringLocalizer[StringLocalizer.Saved], Severity.Success);
+    }
+
+    private async Task SaveSettings()
+    {
+        if (OverviewerHelper.IsOverviewerOutputPathValid(settingsModel.OverviewerOutputPath))
+        {
+            using (var minecraftMonitorContext = minecraftMonitorContextFactory.CreateDbContext())
+            {
+                var settings = await minecraftMonitorContext.Settings.SingleAsync();
+                settings.MinecraftHostname = settingsModel.Hostname;
+                settings.MinecraftPort = settingsModel.Port;
+                settings.MinecraftPassword = settingsModel.Password;
+                settings.OverviewerOutputPath = settingsModel.OverviewerOutputPath;
+                settings.IsOnboardingDone = true;
+                await minecraftMonitorContext.SaveChangesAsync();
+            }
+
+            overviewerOutputPathErrorText = null;
+            snackbar.Add(stringLocalizer[StringLocalizer.Saved], Severity.Success);
+        }
+        else
+        {
+            overviewerOutputPathErrorText = stringLocalizer[StringLocalizer.OverviewerOutputPathErrorText];
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using (var minecraftMonitorContext = minecraftMonitorContextFactory.CreateDbContext())
+        {
+            var settings = await minecraftMonitorContext.Settings.SingleAsync();
+            settingsModel.Hostname = settings.MinecraftHostname;
+            settingsModel.Port = settings.MinecraftPort;
+            settingsModel.Password = settings.MinecraftPassword;
+            settingsModel.OverviewerOutputPath = settings.OverviewerOutputPath;
+        }
+
+        await base.OnInitializedAsync();
+    }
+}

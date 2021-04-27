@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  pull_request:
+    branches:
+    - main
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+      
+    steps:
+
+    - name: 1 - Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+      
+    - name: 2 - GitVersion - Install
+      uses: gittools/actions/gitversion/setup@v0.9.9
+      with:
+        versionSpec: '5.x'
+        
+    - name: 3 - GitVersion - Execute
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0.9.9
+      with:
+        useConfigFile: true
+        configFilePath: .github/GitVersion.yml
+        additionalArguments: '/updateprojectfiles'
+      
+    - name: 4 - .NET - Setup
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    - name: 5 - .Net - Restore
+      run: |
+        cd ./src
+        dotnet restore
+
+    - name: 6 - .Net - Publish
+      run: |
+        cd ./src
+        dotnet publish -r win-x64 -c Release --self-contained true -p:PublishSingleFile=true -p:DebugType=None -p:IsWebConfigTransformDisabled=true -p:PublishTrimmed=true -p:IncludeNativeLibrariesForSelfExtract=true
+        
+    - name: 7 - Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Minecraft-Monitor-win-x64
+        path: ./src/bin/Release/net5.0/win-x64/publish
+        
+    - name: 8 - Zip Artifact
+      uses: papeloto/action-zip@v1
+      with:
+        files: ./src/bin/Release/net5.0/win-x64/publish
+        dest: Minecraft-Monitor.zip
+
+    - name: 9 - Draft Release
+      if: github.ref == 'refs/heads/main'
+      uses: release-drafter/release-drafter@v5.15.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        name: 'Release v${{ steps.gitversion.outputs.majorMinorPatch }}'
+        tag: v${{ steps.gitversion.outputs.majorMinorPatch }}
+        version: v${{ steps.gitversion.outputs.majorMinorPatch }}
+        publish: false
+        prerelease: false
+
+    - name: 10 - Upload Artifact to Release
+      if: github.ref == 'refs/heads/main'
+      uses: xresloader/upload-to-github-release@v1.3.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        file: Minecraft-Monitor.zip
+        tag_name: v${{ steps.gitversion.outputs.majorMinorPatch }}
+        draft: true
+        verbose: true
+        overwrite: true

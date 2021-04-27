@@ -1,0 +1,47 @@
+@implements IDisposable
+
+<div class="monitor-status mx-4">
+    <MudCard Outlined>
+        <MudTooltip Text="@stringLocalizer[monitorService.IsRunning ? StringLocalizer.DisableMonitor : StringLocalizer.EnableMonitor]">
+            <MudSwitch Class="mx-auto" T="bool" CheckedChanged="@ToggleMonitorStatus"
+                Checked="@monitorService.IsRunning" Color="Color.Primary" />
+        </MudTooltip>
+    </MudCard>
+</div>
+
+@code {
+    [Inject] private MonitorService monitorService { get; set; }
+    [Inject] private IStringLocalizer stringLocalizer { get; set; }
+    [Inject] private ISnackbar snackbar { get; set; }
+
+    private void ToggleMonitorStatus()
+    {
+        if (monitorService.IsRunning)
+        {
+            monitorService.Stop();
+            snackbar.Add(stringLocalizer[StringLocalizer.MonitorStopped], Severity.Info);
+        }
+        else
+        {
+            monitorService.Start();
+            snackbar.Add(stringLocalizer[StringLocalizer.MonitorStarted], Severity.Success);
+        }
+    }
+
+    private async void OnStatusChange()
+    {
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        monitorService.OnStatusChange += OnStatusChange;
+
+        await base.OnInitializedAsync();
+    }
+
+    public void Dispose()
+    {
+        monitorService.OnStatusChange -= OnStatusChange;
+    }
+}

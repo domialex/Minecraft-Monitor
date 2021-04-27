@@ -1,0 +1,97 @@
+@implements IDisposable
+
+@attribute [AllowAnonymous]
+
+@page "/"
+
+<PageTitle Title="@mapTitle" NoPrefix />
+
+@if (isMapUsable)
+{
+    <div id="mcmap" />
+    <link rel="stylesheet" href="leaflet.css" />
+}
+else
+{
+    <MudAlert Variant="Variant.Outlined" Severity="Severity.Error">@stringLocalizer[StringLocalizer.MapNotConfigured]
+    </MudAlert>
+}
+
+@code {
+    [Inject] private IConfiguration configuration { get; set; }
+    [Inject] IStringLocalizer stringLocalizer { get; set; }
+    [Inject] private IDbContextFactory<MinecraftMonitorContext> minecraftMonitorContextFactory { get; set; }
+    [Inject] private IDialogService dialogService { get; set; }
+    [Inject] private IJSRuntime jsRuntime { get; set; }
+    [Inject] private MonitorService monitorService { get; set; }
+
+    private string mapTitle { get; set; }
+    private bool isMapUsable { get; set; }
+
+    private async void OnUpdate()
+    {
+        using (var minecraftMonitorContext = minecraftMonitorContextFactory.CreateDbContext())
+        {
+            var players = await minecraftMonitorContext.Players.ToListAsync();
+            try
+            {
+                await jsRuntime.InvokeVoidAsync("minecraftMonitor.processPlayers", players);
+            }
+            catch { }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using (var minecraftMonitorContext = minecraftMonitorContextFactory.CreateDbContext())
+        {
+            var settings = await minecraftMonitorContext.Settings.SingleAsync();
+            isMapUsable = settings.OverviewerOutputPath != null;
+        }
+
+        var mapTitleFromConfiguration = configuration.GetValue<string>("MapTitle");
+        if (!string.IsNullOrWhiteSpace(mapTitleFromConfiguration))
+        {
+            mapTitle = mapTitleFromConfiguration;
+        }
+        else
+        {
+            mapTitle = "Minecraft Monitor - " + stringLocalizer[StringLocalizer.Map];
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (isMapUsable)
+            {
+                // Setup javascript.
+                try
+                {
+                    await jsRuntime.InvokeVoidAsync("loadScript", "leaflet.js");
+                    await jsRuntime.InvokeVoidAsync("loadScript", "overviewer.js");
+                    await jsRuntime.InvokeVoidAsync("loadScript", "overviewerConfig.js");
+                    await jsRuntime.InvokeVoidAsync("overviewer.util.initialize");
+                    await jsRuntime.InvokeVoidAsync("loadScript", "js/minecraftMonitor.js");
+                }
+                catch { }
+
+                OnUpdate();
+
+                monitorService.OnUpdate += OnUpdate;
+            }
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public void Dispose()
+    {
+        if (isMapUsable)
+        {
+            jsRuntime.InvokeVoidAsync("minecraftMonitor.resetState");
+        }
+        monitorService.OnUpdate -= OnUpdate;
+    }
+}

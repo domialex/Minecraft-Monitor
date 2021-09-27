@@ -37,6 +37,3 @@ rcon.password=yourpassword
 - [Minecraft-Overviewer](https://github.com/overviewer/Minecraft-Overviewer)
 - [MudBlazor](https://github.com/Garderoben/MudBlazor)
 - [RconSharp.NetStandard](https://github.com/wgraham17/rconsharp)
-
-## Support
-If you want to show your appreciation, the sponsor button is at the top right of the page 😄.

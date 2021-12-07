@@ -78,7 +78,7 @@ namespace Minecraft_Monitor.Services
                     throw new Exception($"Server did not respond after {TIMEOUT.TotalSeconds} seconds.");
                 }
             }
-            catch
+            catch { }
             {
                 logger.LogError("Could not connect to the server. Verify that the RCON connection is correct.");
                 Connected = false;

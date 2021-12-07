@@ -50,10 +50,7 @@ namespace Minecraft_Monitor.Controllers
                     return Redirect("/dashboard");
                 }
             }
-            catch
-            {
-
-            }
+            catch { }
 
             return Unauthorized();
         }

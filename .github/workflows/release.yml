@@ -34,7 +34,7 @@ jobs:
     - name: 4 - .NET - Setup
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 6.0.x
 
     - name: 5 - .Net - Restore
       run: |
@@ -44,18 +44,18 @@ jobs:
     - name: 6 - .Net - Publish
       run: |
         cd ./src
-        dotnet publish -r win-x64 -c Release --self-contained true -p:PublishSingleFile=true -p:DebugType=None -p:IsWebConfigTransformDisabled=true -p:PublishTrimmed=true -p:IncludeNativeLibrariesForSelfExtract=true
+        dotnet publish -r win-x64 -c Release --self-contained true -p:PublishSingleFile=true -p:DebugType=None -p:IsWebConfigTransformDisabled=true -p:IncludeNativeLibrariesForSelfExtract=true
         
     - name: 7 - Build Artifact
       uses: actions/upload-artifact@v2
       with:
         name: Minecraft-Monitor-win-x64
-        path: ./src/bin/Release/net5.0/win-x64/publish
+        path: ./src/bin/Release/net6.0/win-x64/publish
         
     - name: 8 - Zip Artifact
       uses: papeloto/action-zip@v1
       with:
-        files: ./src/bin/Release/net5.0/win-x64/publish
+        files: ./src/bin/Release/net6.0/win-x64/publish
         dest: Minecraft-Monitor.zip
 
     - name: 9 - Draft Release

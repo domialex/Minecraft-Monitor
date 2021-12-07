@@ -11,5 +11,5 @@
 }
 
 ::deep #mcmap {
-    height: calc(100vh - var(--mud-appbar-min-height) - 3rem);
+    height: calc(100vh - var(--mud-appbar-height) - 3rem);
 }

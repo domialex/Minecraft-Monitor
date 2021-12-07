@@ -4,7 +4,7 @@
 
 @page "/"
 
-<PageTitle Title="@mapTitle" NoPrefix />
+<PageTitle>@mapTitle</PageTitle>
 
 @if (isMapUsable)
 {
@@ -56,7 +56,7 @@ else
         }
         else
         {
-            mapTitle = "Minecraft Monitor - " + stringLocalizer[StringLocalizer.Map];
+            mapTitle = stringLocalizer[StringLocalizer.Map];
         }
     }
 

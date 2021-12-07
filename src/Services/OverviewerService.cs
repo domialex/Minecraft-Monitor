@@ -4,6 +4,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +19,6 @@ namespace Minecraft_Monitor.Services
         private readonly IDbContextFactory<MinecraftMonitorContext> minecraftMonitorContextFactory;
         private readonly ILogger<OverviewerService> logger;
         private readonly string currentDirectory;
-        public event Action<int> OnDownloadProgressChanged;
         public bool IsDownloadingAndExtracting { get; private set; }
 
         public OverviewerService(IDbContextFactory<MinecraftMonitorContext> minecraftMonitorContextFactory,
@@ -40,32 +41,38 @@ namespace Minecraft_Monitor.Services
 
             IsDownloadingAndExtracting = true;
 
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                using (var client = new WebClient())
+                try
                 {
-                    using (var minecraftMonitorContext = minecraftMonitorContextFactory.CreateDbContext())
+                    using (var client = new HttpClient())
                     {
-                        var settings = minecraftMonitorContext.Settings.Single();
+                        using (var minecraftMonitorContext = minecraftMonitorContextFactory.CreateDbContext())
+                        {
+                            var settings = minecraftMonitorContext.Settings.Single();
 
-                        var overviewerPath = Path.Combine(currentDirectory, "overviewer"); // ./overviewer/
-                        var overviewerZipDestination = Path.Combine(currentDirectory, "overviewer.zip"); // ./overviewer/overviewer.zip
+                            var overviewerPath = Path.Combine(currentDirectory, "overviewer"); // ./overviewer/
+                            var overviewerZipDestination = Path.Combine(currentDirectory, "overviewer.zip"); // ./overviewer/overviewer.zip
 
-                        // Get the builds urls from overviewer.org.
-                        var response = client.DownloadString("https://overviewer.org/downloads.json");
-                        var json = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(response);
+                            // Get the builds urls from overviewer.org.
+                            var json = await client.GetFromJsonAsync<Dictionary<string, Dictionary<string, string>>>("https://overviewer.org/downloads.json");
 
-                        // Download and extract the win64 version.
-                        client.DownloadFile(json["win64"]["url"], overviewerZipDestination);
-                        client.DownloadProgressChanged += (s, e) => OnDownloadProgressChanged?.Invoke(e.ProgressPercentage);
-                        ZipFile.ExtractToDirectory(overviewerZipDestination, overviewerPath, true);  // ./overviewer/overviewer-x.x.x/
+                            // Download and extract the win64 version.
+                            var fileBytes = await client.GetByteArrayAsync(json["win64"]["url"]);
+                            File.WriteAllBytes(overviewerZipDestination, fileBytes);
+                            ZipFile.ExtractToDirectory(overviewerZipDestination, overviewerPath, true);  // ./overviewer/overviewer-x.x.x/
 
-                        settings.OverviewerExecutablePath = Path.Combine(overviewerPath, "overviewer-" + json["win64"]["version"], "overviewer.exe");
-                        minecraftMonitorContext.SaveChanges();
+                            settings.OverviewerExecutablePath = Path.Combine(overviewerPath, "overviewer-" + json["win64"]["version"], "overviewer.exe");
+                            minecraftMonitorContext.SaveChanges();
 
-                        // Delete the downloaded zip file.
-                        //File.Delete(overviewerZipDestination);
+                            // Delete the downloaded zip file.
+                            File.Delete(overviewerZipDestination);
+                        }
                     }
+                }
+                catch
+                {
+                    logger.LogError("Could not download Overviewer.");
                 }
 
                 IsDownloadingAndExtracting = false;

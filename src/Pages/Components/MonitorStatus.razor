@@ -30,7 +30,7 @@
 
     private async void OnStatusChange()
     {
-        await InvokeAsync(() => StateHasChanged());
+        await InvokeAsync(StateHasChanged);
     }
 
     protected override async Task OnInitializedAsync()

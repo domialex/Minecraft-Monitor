@@ -218,7 +218,7 @@ namespace Minecraft_Monitor.Services
                         }
                     }
                 }
-                catch
+                catch { }
                 {
                     using (var minecraftMonitorContext = minecraftMonitorContextFactory.CreateDbContext())
                     {
